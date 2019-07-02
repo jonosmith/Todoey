@@ -37,12 +37,12 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		FBD63D1B22C839F7001671AF /* Data Model */ = {
+		FBD63D1B22C839F7001671AF /* Models */ = {
 			isa = PBXGroup;
 			children = (
 				FBD63D1922C839F0001671AF /* Item.swift */,
 			);
-			path = "Data Model";
+			path = Models;
 			sourceTree = "<group>";
 		};
 		FBD63D1C22C83A03001671AF /* Controllers */ = {
@@ -90,8 +90,8 @@
 			isa = PBXGroup;
 			children = (
 				FBEB3FEB22C616010013909C /* AppDelegate.swift */,
+				FBD63D1B22C839F7001671AF /* Models */,
 				FBD63D1C22C83A03001671AF /* Controllers */,
-				FBD63D1B22C839F7001671AF /* Data Model */,
 				FBD63D1D22C83A2B001671AF /* Views */,
 				FBD63D1E22C83A41001671AF /* Supporting Files */,
 				FBEB3FF722C616030013909C /* Info.plist */,
