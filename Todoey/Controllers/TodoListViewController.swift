@@ -13,14 +13,16 @@ class TodoListViewController: UITableViewController {
 
     var itemArray = [Item]()
     
-    let defaults = UserDefaults.standard
+    var selectedCategory : Category? {
+        didSet {
+            loadItems()
+        }
+    }
     
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        loadItems()
     }
 
     //MARK: - Tableview Datasource Methods
@@ -35,7 +37,6 @@ class TodoListViewController: UITableViewController {
         let item = itemArray[indexPath.row]
         
         cell.textLabel?.text = item.title
-        
         cell.accessoryType = item.done ? .checkmark : .none
 
         return cell
@@ -60,23 +61,24 @@ class TodoListViewController: UITableViewController {
     
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        let addTodoItemAlert = createAddTodoItemAlert()
-        
-        present(addTodoItemAlert, animated: true, completion: nil)
-
-    }
-    
-    func createAddTodoItemAlert() -> UIAlertController {
         var alertTextField = UITextField()
         
         let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
         
+        alert.addTextField { (addedTextField) in
+            alertTextField.placeholder = "Enter a name"
+            
+            // Keep in scope of parent
+            alertTextField = addedTextField
+        }
+        
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             if (alertTextField.text != nil) {
-
+                
                 let newItem = Item(context: self.context)
                 newItem.title = alertTextField.text!
                 newItem.done = false
+                newItem.parentCategory = self.selectedCategory
                 
                 self.itemArray.append(newItem)
                 
@@ -86,18 +88,12 @@ class TodoListViewController: UITableViewController {
             }
         }
         
-        alert.addTextField { (addedTextField) in
-            alertTextField.placeholder = "Enter a name"
-            
-            // Keep in scope of parent
-            alertTextField = addedTextField
-        }
-        
-        
         alert.addAction(action)
         
-        return alert
+        present(alert, animated: true, completion: nil)
+
     }
+    
     
     //MARK: - Persistance
     
@@ -111,8 +107,16 @@ class TodoListViewController: UITableViewController {
 
     }
     
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
 
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
+        
         do {
             itemArray = try context.fetch(request)
         } catch {
@@ -131,12 +135,12 @@ extension TodoListViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         let request : NSFetchRequest<Item> = Item.fetchRequest()
         
+        var predicate: NSPredicate?
         if searchBar.text!.count > 0 {
-            request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-//            request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+            predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
         }
         
-        loadItems(with: request)
+        loadItems(with: request, predicate: predicate)
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
